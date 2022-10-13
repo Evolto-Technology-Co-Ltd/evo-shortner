@@ -1,1 +1,1 @@
-web: bin/rama-shortner-backend
+web: bin/evo-shortner
