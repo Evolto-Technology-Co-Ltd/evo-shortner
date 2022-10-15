@@ -25,21 +25,11 @@ func GetMongoConn(document string) *mongo.Collection {
 	var collection *mongo.Collection
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	if config.Environment != "local" {
-		serverAPIOptions := options.ServerAPI(options.ServerAPIVersion1)
-		client, err = mongo.NewClient(options.Client().ApplyURI(fmt.Sprintf("mongodb+srv://ariebrainware:%s@cluster0.h2eai.mongodb.net/%s?retryWrites=true&w=majority", config.MongoPassword, config.MongoDatabase)).SetServerAPIOptions(serverAPIOptions))
-		if err != nil {
-			log.Error(err)
-			panic("Failed to connect mongo")
-		}
-	} else {
-		client, err = mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
-		if err != nil {
-			log.Error(err)
-			panic("Failed to connect mongo")
-		}
+	client, err = mongo.NewClient(options.Client().ApplyURI(fmt.Sprintf("mongodb://%s:27017", config.MongoHost)))
+	if err != nil {
+		log.Error(err)
+		panic("Failed to connect mongo")
 	}
-
 	collection = client.Database(config.MongoDatabase).Collection(document)
 	err = client.Connect(ctx)
 	if err != nil {

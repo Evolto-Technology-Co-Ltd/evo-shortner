@@ -119,13 +119,20 @@ type result struct {
 }
 
 func GetURL(c *gin.Context) {
+	// load app.env file data to struct
+	config, err := config.LoadConfig(".")
+	// handle errors
+	if err != nil {
+		log.Fatalf("can't load environment app.env: %v", err)
+	}
+
 	key := c.Param("key")
 	filter := bson.D{{"short_url", key}}
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	collection := external.GetMongoConn(config.Conf.MongoCollection)
+	collection := external.GetMongoConn(config.MongoCollection)
 	res := &result{}
-	err := collection.FindOne(ctx, filter).Decode(&res)
+	err = collection.FindOne(ctx, filter).Decode(&res)
 	if err == mongo.ErrNoDocuments {
 		// Do something when no record was found
 		fmt.Println("record does not exist")
@@ -134,5 +141,4 @@ func GetURL(c *gin.Context) {
 	}
 	// Do something with result...
 	c.Redirect(http.StatusTemporaryRedirect, res.URL)
-	return
 }

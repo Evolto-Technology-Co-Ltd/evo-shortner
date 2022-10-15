@@ -15,28 +15,18 @@ RUN go mod download
 RUN go mod vendor
 
 RUN CGO_ENABLED=0 go build -v -o /$APP_NAME $GOPATH/src/github.com/ariebrainware/$APP_NAME/$CMD_PATH
- 
+
 # Run Stage
 FROM alpine:3.14
  
-# Set environment variable
-ARG APP_NAME \
-  VERSION \
-  PORT \
-  KEY_LENGTH \
-  ROOT_HOST \
-  ENVIRONMENT \
-  MONGO_HOST \
-  MONGO_DATABASE \
-  MONGO_COLLECTION \
-  MONGO_PASSWORD \
-  ALLOWED_ORIGIN
- 
+WORKDIR /root/
+
 # Copy only required data into this image
-COPY --from=build-env /$APP_NAME .
- 
+COPY --from=build-env /$APP_NAME /root/.
+COPY --from=build-env go/src/github.com/ariebrainware/evo-shortner/app.env /root/.
+
 # Expose application port
-EXPOSE 8081
+EXPOSE 3110
  
 # Start app
-CMD ./$APP_NAME
+CMD ["/bin/sh","-c","/root/evo-shortner"]
