@@ -10,8 +10,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/ariebrainware/rama-shortner-backend/external"
-	"github.com/ariebrainware/rama-shortner-backend/model"
+	"github.com/ariebrainware/evo-shortner/config"
+	"github.com/ariebrainware/evo-shortner/external"
+	"github.com/ariebrainware/evo-shortner/model"
 	"github.com/gin-gonic/gin"
 	"github.com/gofrs/uuid"
 	"github.com/itchyny/base58-go"
@@ -25,8 +26,15 @@ type shortURLRequest struct {
 }
 
 func ShortURL(c *gin.Context) {
+	// load app.env file data to struct
+	config, err := config.LoadConfig(".")
+	// handle errors
+	if err != nil {
+		log.Fatalf("can't load environment app.env: %v", err)
+	}
+
 	request := &shortURLRequest{}
-	err := c.BindJSON(&request)
+	err = c.BindJSON(&request)
 	if err != nil {
 		log.Error(err)
 		c.JSON(http.StatusBadRequest, &model.Response{
@@ -38,7 +46,7 @@ func ShortURL(c *gin.Context) {
 	}
 
 	// Prepare Insert to MongoDB
-	collection := external.GetMongoConn(os.Getenv("MONGO_COLLECTION"))
+	collection := external.GetMongoConn(config.MongoCollection)
 	shortLink := generateShortLink(request.URL)
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -57,7 +65,7 @@ func ShortURL(c *gin.Context) {
 	}
 	data := map[string]interface{}{
 		"id":  res.InsertedID,
-		"key": fmt.Sprintf("%s/%s", os.Getenv("ROOT_HOST"), shortLink),
+		"key": fmt.Sprintf("%s/%s", config.RootHost, shortLink),
 	}
 	c.JSON(http.StatusOK, &model.Response{
 		Success: true,
@@ -84,6 +92,13 @@ func base58Encoded(bytes []byte) string {
 }
 
 func generateShortLink(initialLink string) string {
+	// load app.env file data to struct
+	config, err := config.LoadConfig(".")
+	// handle errors
+	if err != nil {
+		log.Fatalf("can't load environment app.env: %v", err)
+	}
+
 	u, err := uuid.NewV4()
 	if err != nil {
 		panic(err)
@@ -91,7 +106,7 @@ func generateShortLink(initialLink string) string {
 	urlHashBytes := sha256Of(initialLink + u.String())
 	generatedNumber := new(big.Int).SetBytes(urlHashBytes).Uint64()
 	finalString := base58Encoded([]byte(fmt.Sprintf("%d", generatedNumber)))
-	_keyLength := os.Getenv("KEY_LENGTH")
+	_keyLength := config.KeyLength
 	keyLength, err := strconv.Atoi(_keyLength)
 	if err != nil {
 		log.Error(err)
@@ -108,7 +123,7 @@ func GetURL(c *gin.Context) {
 	filter := bson.D{{"short_url", key}}
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	collection := external.GetMongoConn(os.Getenv("MONGO_COLLECTION"))
+	collection := external.GetMongoConn(config.Conf.MongoCollection)
 	res := &result{}
 	err := collection.FindOne(ctx, filter).Decode(&res)
 	if err == mongo.ErrNoDocuments {
