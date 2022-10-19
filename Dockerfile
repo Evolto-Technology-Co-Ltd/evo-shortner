@@ -17,12 +17,12 @@ RUN go mod vendor
 RUN CGO_ENABLED=0 go build -v -o /$APP_NAME $GOPATH/src/github.com/ariebrainware/$APP_NAME/$CMD_PATH
 
 # Run Stage
-FROM alpine:3.14
+FROM alpine:3.16
  
 WORKDIR /root/
 
 # Copy only required data into this image
-COPY --from=build-env /$APP_NAME /root/.
+COPY --from=build-env /evo-shortner /root/.
 COPY --from=build-env go/src/github.com/ariebrainware/evo-shortner/app.env /root/.
 
 # Expose application port

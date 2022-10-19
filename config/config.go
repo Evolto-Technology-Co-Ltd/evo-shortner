@@ -11,9 +11,10 @@ type Config struct {
 	RootHost        string `mapstructure:"ROOT_HOST"`
 	Environment     string `mapstructure:"ENVIRONMENT"`
 	MongoHost       string `mapstructure:"MONGO_HOST"`
+	MongoUser       string `mapstructure:"MONGO_USER"`
+	MongoPassword   string `mapstructure:"MONGO_PASSWORD"`
 	MongoDatabase   string `mapstructure:"MONGO_DATABASE"`
 	MongoCollection string `mapstructure:"MONGO_COLLECTION"`
-	MongoPassword   string `mapstructure:"MONGO_PASSWORD"`
 	AllowedOrigin   string `mapstructure:"ALLOWERD_ORIGIN"`
 }
 

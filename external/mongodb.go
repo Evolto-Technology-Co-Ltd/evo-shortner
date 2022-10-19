@@ -25,7 +25,7 @@ func GetMongoConn(document string) *mongo.Collection {
 	var collection *mongo.Collection
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	client, err = mongo.NewClient(options.Client().ApplyURI(fmt.Sprintf("mongodb://%s:27017", config.MongoHost)))
+	client, err = mongo.NewClient(options.Client().ApplyURI(fmt.Sprintf("mongodb://%s:%s@%s:27017", config.MongoUser, config.MongoPassword, config.MongoHost)))
 	if err != nil {
 		log.Error(err)
 		panic("Failed to connect mongo")
